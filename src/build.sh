@@ -1,0 +1,2 @@
+g++ -O3 -I "../libs/glfw/include/GLFW" -I "../libs/glm/glm" -I "../../sdk/1.3.211.0/x86_64/" main.cpp -o vlkn \
+			-L ../../sdk/1.3.211.0/x86_64/lib/ -L ../libs/glfw/build/src -lvulkan -lglfw3 -ldl -lpthread -lVkLayer_khronos_validation
