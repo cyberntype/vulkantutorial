@@ -10,6 +10,7 @@
 #include <iostream>
 #include <vector>
 const std::vector<const char *> validation_layers = {"VK_LAYER_KHRONOS_validation"};
+const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 #ifdef NDEBUG
 	const bool enableValidationLayers = false;
 #else
@@ -87,6 +88,7 @@ class VulkanComponents {
 			vkEnumeratePhysicalDevices(instance, &dev_count, devices.data());
 
 			for(const auto &device : devices) {
+				cout << "device : " << device.deviceName << "\n";
 				if(is_device_okay(device)) {
 					phys = device;
 					break;
@@ -98,14 +100,45 @@ class VulkanComponents {
 			}
 		}
 
+		void create_logical_device()
+		{
+			VkDeviceCreateInfo createInfo{};
+
+			float queue_prio = 1.0f;
+			QueueFamilyIndices indices = findQueueFamilies(phys);
+
+			VkDeviceQueueCreateInfo queue_info{};
+			queue_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+			queue_info.queueFamilyIndex = indices.graphicsFamily.value();
+			queue_info.queueCount = 1;
+
+			queue_info.pQueuePriorities = &queue_prio;
+			cinfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+			cinfo.pQueueCreateInfos = &queue_create;
+			cinfo.queueCreateInfoCount = 1;
+			cinfo.enabledExtensionCount = (uint32_t)deviceExtensions.size();
+			cinfo.ppEnabledExtensionNames = deviceExtensions.data();
+			//cinfo.pEnabledFeatures = ;
+
+			if (vkCreateDevice(phys, &cinfo, nullptr, &device) != VK_SUCCESS) {
+   				throw std::runtime_error("failed to create logical device!");
+			}
+
+			vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsq);
+		}
+
 		void cleanup()
 		{
 			vkDestroyInstance(instance, 0);
+			vkDestroyDevice(device, 0);
 		}
 
 	private:
 		VkInstance instance;
 		VkPhysicalDevice phys = VK_NULL_HANDLE;
+		VkDevice device;
+		VkQueue graphicsq;
+		VkSurfaceKHR surface;
 };
 
 
